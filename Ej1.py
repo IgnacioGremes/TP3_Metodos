@@ -9,8 +9,14 @@ import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
 
 # Load the CSV file
-csv_file_path = "C:/Users/iegre/OneDrive/Escritorio/repositorio Git/Metodos numericos/TP3/TP3_Metodos/dataset02.csv" 
-txt_file_path = "C:/Users/iegre/OneDrive/Escritorio/repositorio Git/Metodos numericos/TP3/TP3_Metodos/y2.txt"
+# "/home/ig/Desktop/Repositorios Git/TP3_Metodos/dataset02.csv"
+# "/home/ig/Desktop/Repositorios Git/TP3_Metodos/y2.txt"
+
+# "C:/Users/iegre/OneDrive/Escritorio/repositorio Git/Metodos numericos/TP3/TP3_Metodos/dataset02.csv" 
+# "C:/Users/iegre/OneDrive/Escritorio/repositorio Git/Metodos numericos/TP3/TP3_Metodos/y2.txt"
+
+csv_file_path = "/home/ig/Desktop/Repositorios Git/TP3_Metodos/dataset02.csv"
+txt_file_path = "/home/ig/Desktop/Repositorios Git/TP3_Metodos/y2.txt"
 data = pd.read_csv(csv_file_path)
 
 # Access all values excluding the first column and the first row
@@ -36,10 +42,12 @@ def calculate_similarity_matrix(X, sigma):
 # Suponemos un valor de sigma
 sigma = 1.0
 X = dataset.values
+X_centered = X - np.mean(X,axis=0)
 Y = read_text_file(txt_file_path)
+Y_centered = Y - np.mean(Y)
 
 
-similarity_matrix_original = calculate_similarity_matrix(X, sigma)
+similarity_matrix_original = calculate_similarity_matrix(X_centered, sigma)
 
 #Aplicar SVD
 def apply_SVD(X):
@@ -48,10 +56,10 @@ def apply_SVD(X):
 
 # Aplicar PCA y reducir la dimensionalidad
 def apply_pca(X, d):
-    X_centered = X - np.mean(X, axis=0)
-    U, S, Vt = apply_SVD(X_centered)
+    # X_centered = X - np.mean(X, axis=0)
+    U, S, Vt = apply_SVD(X)
     V_d = Vt.T[:, :d]
-    X_reduced = X_centered @ V_d
+    X_reduced = X @ V_d
 
     return X_reduced
 
@@ -59,6 +67,8 @@ def errorDePrediccion(X,beta,y):
     return np.linalg.norm((X @ beta)-y) #puede que aca haya que restar el mean de y
 
 def resolverSistemaConPFeatures(X,y):
+    # X_centered = X - np.mean(X, axis=0)
+    # y_centered = y - np.mean(y)
     u, s, vt = apply_SVD(X)
     sd = s[slice(102)]
     ud = u[:,:102]
@@ -67,23 +77,23 @@ def resolverSistemaConPFeatures(X,y):
     return beta
 
 def resolverSistemaConDFeatures(X,y,d):
-    X_centered = X - np.mean(X, axis=0)
-    y_centered = y - np.mean(y)
-    u, s, vt = apply_SVD(X_centered)
+    # X_centered = X - np.mean(X, axis=0)
+    # y_centered = y - np.mean(y)
+    u, s, vt = apply_SVD(X)
     sd = s[slice(d)]
     ud = u[:,:d]
-    beta = np.linalg.inv(np.diag(sd)) @ ud.T @ y_centered
+    beta = np.linalg.inv(np.diag(sd)) @ ud.T @ y
     return beta
 
 # Reducir a d = 2, 6, 10
 d_values = [2, 6, 10]
 X_reduced_list = []
 for d in d_values:
-    X_reduced = apply_pca(X, d)
+    X_reduced = apply_pca(X_centered, d)
     X_reduced_list.append((d, X_reduced))
 
 #Hacer SVD
-u, s, vt = apply_SVD(X)
+u, s, vt = apply_SVD(X_centered)
 
 #Remover valores singulares que son 0
 s_matrix = s[slice(102)]
@@ -92,18 +102,12 @@ vt_matrix = vt[:102,:]
 
 
 #Resolver sistema
-betaP = resolverSistemaConPFeatures(X,Y)
-beta1 = resolverSistemaConDFeatures(X,Y,1)
-beta2 = resolverSistemaConDFeatures(X,Y,2)
-beta3 = resolverSistemaConDFeatures(X,Y,3)
-beta6 = resolverSistemaConDFeatures(X,Y,6)
-beta10 = resolverSistemaConDFeatures(X,Y,10)
-print(beta1)
-print(beta2)
-print(beta3)
-print(beta6)
-print(beta10)
-print(betaP)
+betaP = resolverSistemaConPFeatures(X_centered,Y_centered)
+beta1 = resolverSistemaConDFeatures(X_centered,Y_centered,1)
+beta2 = resolverSistemaConDFeatures(X_centered,Y_centered,2)
+beta3 = resolverSistemaConDFeatures(X_centered,Y_centered,3)
+beta6 = resolverSistemaConDFeatures(X_centered,Y_centered,6)
+beta10 = resolverSistemaConDFeatures(X_centered,Y_centered,10)
 
 # Calcular matrices de similitud en los espacios reducidos
 similarity_matrices_reduced = []
@@ -147,12 +151,12 @@ x1s = []
 y1s = []
 z1s = []
 
-for j in range(X.shape[0]):
-    x1s.append (vt[0,:] @ X[j,:].T)
-    y1s.append (vt[1,:] @ X[j,:].T)
-    z1s.append ( vt[2,:] @ X[j,:].T)
+for j in range(X_centered.shape[0]):
+    x1s.append (vt[0,:] @ X_centered[j,:].T)
+    y1s.append (vt[1,:] @ X_centered[j,:].T)
+    z1s.append (vt[2,:] @ X_centered[j,:].T)
 
-ax1.scatter(x1s,y1s,z1s,c=Y)
+ax1.scatter(x1s,y1s,z1s,c=Y_centered)
 
 plt.show()
 
@@ -161,11 +165,11 @@ fig4 = plt.figure()
 ax2 = fig4.add_subplot(111)
 x2s = []
 y2s = []
-for j in range(X.shape[0]):
-    x2s.append (vt[0,:] @ X[j,:].T)
-    y2s.append (vt[1,:] @ X[j,:].T)
+for j in range(X_centered.shape[0]):
+    x2s.append (vt[0,:] @ X_centered[j,:].T)
+    y2s.append (vt[1,:] @ X_centered[j,:].T)
 
-ax2.scatter(x2s,y2s,c=Y)
+ax2.scatter(x2s,y2s,c=Y_centered)
 plt.show()
 
 #Graficar error a medida que aumentan las dimensiones
@@ -174,20 +178,29 @@ ax3 = fig5.add_subplot(111)
 errores = []
 dimensiones = np.arange(2,103)
 for i in range(2,102):
-    beta_i = resolverSistemaConDFeatures(X,Y,i)
-    errores.append (errorDePrediccion(apply_pca(X,i),beta_i,Y)) #preguntar si tengo que cnetralizar Y aca tambien y porque con dimension 1 me da un error altisimo
-errores.append(errorDePrediccion(X,resolverSistemaConPFeatures(X,Y),Y))
+    beta_i = resolverSistemaConDFeatures(X_centered,Y_centered,i)
+    errores.append (errorDePrediccion(apply_pca(X_centered,i),beta_i,Y_centered)) 
+errores.append(errorDePrediccion(X_centered,resolverSistemaConPFeatures(X_centered,Y_centered),Y_centered))
 ax3.plot(dimensiones,errores,'o-')
 plt.xlabel("Dimensionse")
 plt.ylabel("Error")
 plt.show()
 
 
-#Graficar el Y dado contra el y calculado con X*Beta
+#Graficar el Y exacto dado contra el Y estimado con X*Beta
 numeroDeValores = np.arange(0,2000)
 fig6 = plt.figure()
 ax4 = fig6.add_subplot(111)
-ax4.scatter(numeroDeValores, Y, color = "r", label = 'Soluciones exactas')
-ax4.scatter(numeroDeValores, X @ betaP,marker='x', color="g", label='Soluciones estimadas' )
+ax4.scatter(numeroDeValores, Y_centered, color = "r", label = 'Soluciones exactas')
+ax4.scatter(numeroDeValores, X_centered @ betaP,marker='x', color="g", label='Soluciones estimadas' )
 plt.title("Soluciones exactas y aproximadas")
+plt.show()
+
+#Graficar peso de cada dimension
+dimensiones = np.arange(1,107)
+fig7 = plt.figure()
+ax5 = fig7.add_subplot(111)
+ax5.bar(dimensiones,betaP)
+plt.xlabel("Dimension")
+plt.ylabel("Peso")
 plt.show()
