@@ -175,7 +175,19 @@ errores = []
 dimensiones = np.arange(2,103)
 for i in range(2,102):
     beta_i = resolverSistemaConDFeatures(X,Y,i)
-    errores.append (errorDePrediccion(apply_pca(X,i),beta_i,Y))
+    errores.append (errorDePrediccion(apply_pca(X,i),beta_i,Y)) #preguntar si tengo que cnetralizar Y aca tambien y porque con dimension 1 me da un error altisimo
 errores.append(errorDePrediccion(X,resolverSistemaConPFeatures(X,Y),Y))
 ax3.plot(dimensiones,errores,'o-')
+plt.xlabel("Dimensionse")
+plt.ylabel("Error")
+plt.show()
+
+
+#Graficar el Y dado contra el y calculado con X*Beta
+numeroDeValores = np.arange(0,2000)
+fig6 = plt.figure()
+ax4 = fig6.add_subplot(111)
+ax4.scatter(numeroDeValores, Y, color = "r", label = 'Soluciones exactas')
+ax4.scatter(numeroDeValores, X @ betaP,marker='x', color="g", label='Soluciones estimadas' )
+plt.title("Soluciones exactas y aproximadas")
 plt.show()
