@@ -35,9 +35,6 @@ def calculate_similarity_matrix(X, sigma):
     pairwise_sq_dists = np.square(np.linalg.norm(X[:, np.newaxis] - X, axis=2))
     similarity_matrix = np.exp(-pairwise_sq_dists / (2 * sigma ** 2))
     return similarity_matrix
-    # pairwise_dists = squareform(pdist(X, 'euclidean'))
-    # K = np.exp(-pairwise_dists ** 2 / (2 * sigma ** 2))
-    # return K
 
 # Suponemos un valor de sigma
 sigma = 1.0
@@ -56,7 +53,6 @@ def apply_SVD(X):
 
 # Aplicar PCA y reducir la dimensionalidad
 def apply_pca(X, d):
-    # X_centered = X - np.mean(X, axis=0)
     U, S, Vt = apply_SVD(X)
     V_d = Vt.T[:, :d]
     X_reduced = X @ V_d
@@ -64,21 +60,18 @@ def apply_pca(X, d):
     return X_reduced
 
 def errorDePrediccion(X,beta,y):
-    return np.linalg.norm((X @ beta)-y) #puede que aca haya que restar el mean de y
+    return np.linalg.norm((X @ beta)-y) 
 
 def resolverSistemaConPFeatures(X,y):
-    # X_centered = X - np.mean(X, axis=0)
-    # y_centered = y - np.mean(y)
     u, s, vt = apply_SVD(X)
     sd = s[slice(102)]
     ud = u[:,:102]
     vd = vt.T[:,:102]
-    beta = vd @ np.linalg.inv(np.diag(sd)) @ ud.T @ y #preguntar porque aca me quedan 106 valores en vez de 102
+    beta = vd @ np.linalg.inv(np.diag(sd)) @ ud.T @ y 
     return beta
 
 def resolverSistemaConDFeatures(X,y,d):
-    # X_centered = X - np.mean(X, axis=0)
-    # y_centered = y - np.mean(y)
+
     u, s, vt = apply_SVD(X)
     sd = s[slice(d)]
     ud = u[:,:d]
@@ -176,13 +169,13 @@ plt.show()
 fig5 = plt.figure()
 ax3 = fig5.add_subplot(111)
 errores = []
-dimensiones = np.arange(2,103)
-for i in range(2,102):
+dimensiones = np.arange(1,103)
+for i in range(1,102):
     beta_i = resolverSistemaConDFeatures(X_centered,Y_centered,i)
     errores.append (errorDePrediccion(apply_pca(X_centered,i),beta_i,Y_centered)) 
 errores.append(errorDePrediccion(X_centered,resolverSistemaConPFeatures(X_centered,Y_centered),Y_centered))
 ax3.plot(dimensiones,errores,'o-')
-plt.xlabel("Dimensionse")
+plt.xlabel("Dimensiones")
 plt.ylabel("Error")
 plt.show()
 
@@ -194,6 +187,7 @@ ax4 = fig6.add_subplot(111)
 ax4.scatter(numeroDeValores, Y_centered, color = "r", label = 'Soluciones exactas')
 ax4.scatter(numeroDeValores, X_centered @ betaP,marker='x', color="g", label='Soluciones estimadas' )
 plt.title("Soluciones exactas y aproximadas")
+plt.legend()
 plt.show()
 
 #Graficar peso de cada dimension
