@@ -24,8 +24,7 @@ def gradiente_descendente(x, A, b, F, grad_F, F2, grad_F2, num_iter,valorDelta):
     sigma_max = max(S)
     delta2 = valorDelta * sigma_max 
     H1 = hessianoF1(A)
-    # lambda_max = max(np.linalg.eigvals(H1))
-    lambda_max = 2*sigma_max **2
+    lambda_max = max(np.linalg.eigvals(H1))
     step = 1 / lambda_max
     history_F = []
     history_F2 = []
